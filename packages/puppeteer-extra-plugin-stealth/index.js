@@ -2,6 +2,44 @@
 
 const { PuppeteerExtraPlugin } = require('puppeteer-extra-plugin')
 
+// Static imports of all evasion modules - enables bundling without dynamic requires
+const evasionChromeApp = require('./evasions/chrome.app')
+const evasionChromeCsi = require('./evasions/chrome.csi')
+const evasionChromeLoadTimes = require('./evasions/chrome.loadTimes')
+const evasionChromeRuntime = require('./evasions/chrome.runtime')
+const evasionDefaultArgs = require('./evasions/defaultArgs')
+const evasionIframeContentWindow = require('./evasions/iframe.contentWindow')
+const evasionMediaCodecs = require('./evasions/media.codecs')
+const evasionNavigatorHardwareConcurrency = require('./evasions/navigator.hardwareConcurrency')
+const evasionNavigatorLanguages = require('./evasions/navigator.languages')
+const evasionNavigatorPermissions = require('./evasions/navigator.permissions')
+const evasionNavigatorPlugins = require('./evasions/navigator.plugins')
+const evasionNavigatorWebdriver = require('./evasions/navigator.webdriver')
+const evasionSourceurl = require('./evasions/sourceurl')
+const evasionUserAgentOverride = require('./evasions/user-agent-override')
+const evasionWebglVendor = require('./evasions/webgl.vendor')
+const evasionWindowOuterdimensions = require('./evasions/window.outerdimensions')
+
+// Registry mapping evasion names to their factory functions
+const EVASION_REGISTRY = {
+  'chrome.app': evasionChromeApp,
+  'chrome.csi': evasionChromeCsi,
+  'chrome.loadTimes': evasionChromeLoadTimes,
+  'chrome.runtime': evasionChromeRuntime,
+  'defaultArgs': evasionDefaultArgs,
+  'iframe.contentWindow': evasionIframeContentWindow,
+  'media.codecs': evasionMediaCodecs,
+  'navigator.hardwareConcurrency': evasionNavigatorHardwareConcurrency,
+  'navigator.languages': evasionNavigatorLanguages,
+  'navigator.permissions': evasionNavigatorPermissions,
+  'navigator.plugins': evasionNavigatorPlugins,
+  'navigator.webdriver': evasionNavigatorWebdriver,
+  'sourceurl': evasionSourceurl,
+  'user-agent-override': evasionUserAgentOverride,
+  'webgl.vendor': evasionWebglVendor,
+  'window.outerdimensions': evasionWindowOuterdimensions
+}
+
 /**
  * Stealth mode: Applies various techniques to make detection of headless puppeteer harder. 💯
  *
@@ -16,30 +54,8 @@ const { PuppeteerExtraPlugin } = require('puppeteer-extra-plugin')
  * is kept as flexibile as possible, to support quick testing and iterations.
  *
  * ### Modularity
- * This plugin uses `puppeteer-extra`'s dependency system to only require
- * code mods for evasions that have been enabled, to keep things modular and efficient.
- *
- * The `stealth` plugin is a convenience wrapper that requires multiple [evasion techniques](./evasions/)
- * automatically and comes with defaults. You could also bypass the main module and require
- * specific evasion plugins yourself, if you whish to do so (as they're standalone `puppeteer-extra` plugins):
- *
- * ```es6
- * // bypass main module and require a specific stealth plugin directly:
- * puppeteer.use(require('puppeteer-extra-plugin-stealth/evasions/console.debug')())
- * ```
- *
- * ### Contributing
- * PRs are welcome, if you want to add a new evasion technique I suggest you
- * look at the [template](./evasions/_template) to kickstart things.
- *
- * ### Kudos
- * Thanks to [Evan Sangaline](https://intoli.com/blog/not-possible-to-block-chrome-headless/) and [Paul Irish](https://github.com/paulirish/headless-cat-n-mouse) for kickstarting the discussion!
- *
- * ---
- *
- * @todo
- * - white-/blacklist with url globs (make this a generic plugin method?)
- * - dynamic whitelist based on function evaluation
+ * This plugin uses static imports for all evasions, making it compatible with bundlers
+ * like webpack, ncc, and esbuild. All evasion techniques are included by default.
  *
  * @example
  * const puppeteer = require('puppeteer-extra')
@@ -72,6 +88,7 @@ const { PuppeteerExtraPlugin } = require('puppeteer-extra-plugin')
 class StealthPlugin extends PuppeteerExtraPlugin {
   constructor(opts = {}) {
     super(opts)
+    this._evasionInstances = []
   }
 
   get name() {
@@ -79,24 +96,7 @@ class StealthPlugin extends PuppeteerExtraPlugin {
   }
 
   get defaults() {
-    const availableEvasions = new Set([
-      'chrome.app',
-      'chrome.csi',
-      'chrome.loadTimes',
-      'chrome.runtime',
-      'defaultArgs',
-      'iframe.contentWindow',
-      'media.codecs',
-      'navigator.hardwareConcurrency',
-      'navigator.languages',
-      'navigator.permissions',
-      'navigator.plugins',
-      'navigator.webdriver',
-      'sourceurl',
-      'user-agent-override',
-      'webgl.vendor',
-      'window.outerdimensions'
-    ])
+    const availableEvasions = new Set(Object.keys(EVASION_REGISTRY))
     return {
       availableEvasions,
       // Enable all available evasions by default
@@ -105,26 +105,22 @@ class StealthPlugin extends PuppeteerExtraPlugin {
   }
 
   /**
-   * Requires evasion techniques dynamically based on configuration.
-   *
+   * No dynamic dependencies - all evasions are statically imported and managed internally.
+   * This enables bundling with tools like webpack, ncc, esbuild.
    * @private
    */
   get dependencies() {
-    return new Set(
-      [...this.opts.enabledEvasions].map(e => `${this.name}/evasions/${e}`)
-    )
+    return new Set()
   }
 
   /**
    * Get all available evasions.
    *
-   * Please look into the [evasions directory](./evasions/) for an up to date list.
-   *
    * @type {Set<string>} - A Set of all available evasions.
    *
    * @example
    * const pluginStealth = require('puppeteer-extra-plugin-stealth')()
-   * console.log(pluginStealth.availableEvasions) // => Set { 'user-agent', 'console.debug' }
+   * console.log(pluginStealth.availableEvasions) // => Set { 'chrome.app', 'chrome.csi', ... }
    * puppeteer.use(pluginStealth)
    */
   get availableEvasions() {
@@ -141,7 +137,7 @@ class StealthPlugin extends PuppeteerExtraPlugin {
    * @example
    * // Remove specific evasion from enabled ones dynamically
    * const pluginStealth = require('puppeteer-extra-plugin-stealth')()
-   * pluginStealth.enabledEvasions.delete('console.debug')
+   * pluginStealth.enabledEvasions.delete('chrome.app')
    * puppeteer.use(pluginStealth)
    */
   get enabledEvasions() {
@@ -155,10 +151,90 @@ class StealthPlugin extends PuppeteerExtraPlugin {
     this.opts.enabledEvasions = evasions
   }
 
+  /**
+   * Instantiate all enabled evasion plugins.
+   * Called lazily before first use.
+   * @private
+   */
+  _ensureEvasionsInstantiated() {
+    if (this._evasionInstances.length > 0) {
+      return
+    }
+    for (const name of this.opts.enabledEvasions) {
+      const factory = EVASION_REGISTRY[name]
+      if (factory) {
+        this._evasionInstances.push(factory())
+      }
+    }
+  }
+
+  /**
+   * Hook: Before browser launch.
+   * Delegates to all enabled evasion plugins that have beforeLaunch.
+   */
+  async beforeLaunch(options) {
+    this._ensureEvasionsInstantiated()
+    for (const evasion of this._evasionInstances) {
+      if (evasion.beforeLaunch) {
+        await evasion.beforeLaunch(options)
+      }
+    }
+  }
+
+  /**
+   * Hook: Before browser connect.
+   * Delegates to all enabled evasion plugins that have beforeConnect.
+   */
+  async beforeConnect(options) {
+    this._ensureEvasionsInstantiated()
+    for (const evasion of this._evasionInstances) {
+      if (evasion.beforeConnect) {
+        await evasion.beforeConnect(options)
+      }
+    }
+  }
+
+  /**
+   * Hook: When browser is available.
+   * Increases max listeners and delegates to evasions.
+   */
   async onBrowser(browser) {
     if (browser && browser.setMaxListeners) {
       // Increase event emitter listeners to prevent MaxListenersExceededWarning
       browser.setMaxListeners(30)
+    }
+    this._ensureEvasionsInstantiated()
+    for (const evasion of this._evasionInstances) {
+      if (evasion.onBrowser) {
+        await evasion.onBrowser(browser)
+      }
+    }
+  }
+
+  /**
+   * Hook: When a new page is created.
+   * Delegates to all enabled evasion plugins that have onPageCreated.
+   * Handles TargetCloseError gracefully - if page closes mid-setup, abort remaining evasions.
+   */
+  async onPageCreated(page) {
+    this._ensureEvasionsInstantiated()
+    for (const evasion of this._evasionInstances) {
+      if (evasion.onPageCreated) {
+        try {
+          await evasion.onPageCreated(page)
+        } catch (err) {
+          // If target/page closed during evasion setup, abort remaining evasions
+          // This prevents cascading TargetCloseError/ProtocolError noise
+          if (
+            err.name === 'TargetCloseError' ||
+            (err.message && err.message.includes('Target closed')) ||
+            (err.message && err.message.includes('Session closed'))
+          ) {
+            return
+          }
+          throw err
+        }
+      }
     }
   }
 }
@@ -171,7 +247,3 @@ class StealthPlugin extends PuppeteerExtraPlugin {
  */
 const defaultExport = opts => new StealthPlugin(opts)
 module.exports = defaultExport
-
-// const moduleExport = defaultExport
-// moduleExport.StealthPlugin = StealthPlugin
-// module.exports = moduleExport

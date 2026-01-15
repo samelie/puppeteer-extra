@@ -50,9 +50,8 @@ class Plugin extends PuppeteerExtraPlugin {
     return 'stealth/evasions/user-agent-override'
   }
 
-  get dependencies() {
-    return new Set(['user-preferences'])
-  }
+  // Note: user-preferences dependency removed - evasions are now managed internally by stealth plugin
+  // The locale preference in Chrome profile won't be set automatically, but the main functionality works.
 
   get defaults() {
     return {
