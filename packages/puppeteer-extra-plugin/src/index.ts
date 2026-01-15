@@ -72,7 +72,11 @@ export abstract class PuppeteerExtraPlugin {
     this._debugBase = debug(`puppeteer-extra-plugin:base:${this.name}`)
     this._childClassMembers = []
 
-    this._opts = merge(this.defaults, opts || {})
+    // Don't merge Set/Map - deepmerge destroys them by treating as objects with no enumerable props
+    this._opts = merge(this.defaults, opts || {}, {
+      isMergeableObject: (val): val is object =>
+        val !== null && typeof val === 'object' && !(val instanceof Set) && !(val instanceof Map)
+    })
 
     this._debugBase('Initialized.')
   }
