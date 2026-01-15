@@ -1,8 +1,6 @@
 import debug, { Debugger } from 'debug'
+import merge from 'deepmerge'
 import * as Puppeteer from './puppeteer'
-
-/** @private */
-const merge = require('merge-deep')
 
 export interface PluginOptions {
   [key: string]: any

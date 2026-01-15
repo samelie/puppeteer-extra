@@ -1,6 +1,6 @@
 {
-  "name": "puppeteer-extra-plugin",
-  "version": "3.2.3",
+  "name": "@selie/puppeteer-extra-plugin",
+  "version": "3.2.4",
   "description": "Base class for puppeteer-extra plugins.",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
@@ -64,17 +64,17 @@
   "dependencies": {
     "@types/debug": "^4.1.0",
     "debug": "^4.1.1",
-    "merge-deep": "^3.0.1"
+    "deepmerge": "^4.3.1"
   },
   "peerDependencies": {
-    "playwright-extra": "*",
-    "puppeteer-extra": "*"
+    "@selie/playwright-extra": "*",
+    "@selie/puppeteer-extra": "*"
   },
   "peerDependenciesMeta": {
-    "puppeteer-extra": {
+    "@selie/playwright-extra": {
       "optional": true
     },
-    "playwright-extra": {
+    "@selie/puppeteer-extra": {
       "optional": true
     }
   },
