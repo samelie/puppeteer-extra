@@ -1,6 +1,6 @@
 {
   "name": "@selie/puppeteer-extra-plugin-user-preferences",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Launch puppeteer with arbitrary user preferences.",
   "main": "index.js",
   "repository": "berstend/puppeteer-extra",
@@ -31,8 +31,8 @@
     "puppeteer": "^2.0.0"
   },
   "dependencies": {
-    "@selie/puppeteer-extra-plugin": "^3.2.4",
-    "@selie/puppeteer-extra-plugin-user-data-dir": "^2.4.3",
+    "@selie/puppeteer-extra-plugin": "^3.2.6",
+    "@selie/puppeteer-extra-plugin-user-data-dir": "^2.4.4",
     "debug": "^4.1.1",
     "deepmerge": "^4.2.2"
   },

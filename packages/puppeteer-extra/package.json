@@ -1,6 +1,6 @@
 {
   "name": "@selie/puppeteer-extra",
-  "version": "3.3.7",
+  "version": "3.3.8",
   "description": "Teach puppeteer new tricks through plugins.",
   "repository": "berstend/puppeteer-extra",
   "author": "berstend",

@@ -1,6 +1,6 @@
 {
   "name": "@selie/puppeteer-extra-plugin-stealth",
-  "version": "2.11.4",
+  "version": "2.11.5",
   "description": "Stealth mode: Applies various techniques to make detection of headless puppeteer harder.",
   "main": "index.js",
   "typings": "index.d.ts",
@@ -51,8 +51,7 @@
     "puppeteer": "9"
   },
   "dependencies": {
-    "@selie/puppeteer-extra-plugin": "^3.2.4",
-    "@selie/puppeteer-extra-plugin-user-preferences": "^2.4.3",
+    "@selie/puppeteer-extra-plugin": "^3.2.6",
     "debug": "^4.1.1"
   },
   "peerDependencies": {
